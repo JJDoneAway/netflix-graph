@@ -95,7 +95,7 @@ public class PreparationClassical {
 	private static WebTarget getResource() {
 
 		HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder().nonPreemptive()
-				.credentials("admin", "admin-24").build();
+				.credentials("**", "**").build();
 
 		ClientConfig clientConfig = new ClientConfig();
 		clientConfig.register(feature);
