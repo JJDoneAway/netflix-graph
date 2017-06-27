@@ -1,10 +1,14 @@
 package de.hoehne.netflix_graph.preperation;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import javax.ws.rs.client.Client;
@@ -12,7 +16,11 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
@@ -34,19 +42,24 @@ public class PreparationClassical {
 
 	}
 
-	public static void loadKeyProviderClassic() {
-		Arrays//
-				.asList(new File("/home/johannes/tmp")//
-						.listFiles())
-				.stream().parallel()//
-				.map(file -> {
-					try {
-						return FileUtils.readFileToString(file);
-					} catch (IOException e) {
-						e.printStackTrace();
-						return null;
-					}
-				})//
+	public static void readTar(List<String> myQueue) throws Exception {
+		TarArchiveInputStream tarInput = new TarArchiveInputStream(
+				new GzipCompressorInputStream(new FileInputStream("./src/main/resources/solr.tar.gz")));
+		TarArchiveEntry currentEntry = tarInput.getNextTarEntry();
+		BufferedReader br = null;
+		while (currentEntry != null) {
+			br = new BufferedReader(new InputStreamReader(tarInput));
+			String solr = IOUtils.toString(br);
+			myQueue.add(solr);
+			currentEntry = tarInput.getNextTarEntry();
+		}
+		tarInput.close();
+	}
+
+	public static void loadKeyProviderClassic() throws Exception {
+		List<String> solrs = new ArrayList<String>();
+		readTar(solrs);
+		solrs.stream().parallel()//
 				.map(solr -> getArticle(solr))//
 				.forEachOrdered(article -> {
 
@@ -120,6 +133,5 @@ public class PreparationClassical {
 		return art;
 
 	}
-
 
 }
